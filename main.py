@@ -74,7 +74,7 @@ print(f'Выберите значение удельной нагрузки дл
           f'6 - (1,10) для площадок навалочных грузов.\n')
 for i in range(a):
     while True:
-        element = float(input(f'Введите значение удельной нагрузки для {i + 1}: '))
+        element = parse_float(input(f'Введите значение удельной нагрузки для {i + 1}: '))
         if element == 1:
             p.append(0.85)
             break
