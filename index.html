@@ -13,13 +13,15 @@
         <div class="form-group">
             <label for="cargoCount">Количество поступающих на склад грузов:</label>
             <input type="number" id="cargoCount" min="1" required>
+            <span class="unit">шт.</span>
         </div>
 
         <div id="cargoInputs"></div>
 
         <div class="form-group">
-            <label for="warehouseWidth">Ширина склада (в метрах):</label>
+            <label for="warehouseWidth">Ширина склада:</label>
             <input type="number" id="warehouseWidth" step="0.01" min="0" required>
+            <span class="unit">м</span>
         </div>
 
         <div class="form-group">
@@ -34,6 +36,28 @@
     </form>
 
     <div id="results"></div>
+    
+    <div id="coefficients" class="coefficients-section">
+        <h2>Коэффициенты использования склада</h2>
+        <div class="coefficients-content">
+            <div class="coefficient-group">
+                <h3>Коэффициент использования площади склада</h3>
+                <div id="k_use_space"></div>
+            </div>
+            <div class="coefficient-group">
+                <h3>Коэффициент использования склада по вместимости</h3>
+                <div id="k_use_v"></div>
+            </div>
+            <div class="coefficient-group">
+                <h3>Коэффициент оборота склада</h3>
+                <div id="k_ob"></div>
+            </div>
+            <div class="coefficient-group">
+                <h3>Коэффициент использования склада по грузопереработке</h3>
+                <div id="Qck"></div>
+            </div>
+        </div>
+    </div>
 
     <script src="warehouseCalculator.js"></script>
 </body>

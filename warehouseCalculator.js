@@ -36,6 +36,40 @@ function createCargoInputs(count) {
     const container = document.getElementById('cargoInputs');
     container.innerHTML = '';
     
+    // Добавляем общие поля для коэффициентов
+    const commonInputs = document.createElement('div');
+    commonInputs.className = 'common-inputs';
+    commonInputs.innerHTML = `
+        <h3>Дополнительные параметры для расчета коэффициентов</h3>
+        <div class="form-group">
+            <label for="Fl">Площадь непосредственно занятая грузом:</label>
+            <input type="number" id="Fl" step="0.01" min="0" required>
+            <span class="unit">м²</span>
+        </div>
+        <div class="form-group">
+            <label for="Vf">Среднее количество грузов на складе за период:</label>
+            <input type="number" id="Vf" step="0.01" min="0" required>
+            <span class="unit">т</span>
+        </div>
+        <div class="form-group">
+            <label for="Qn">Поступление грузов на склад:</label>
+            <input type="number" id="Qn" step="0.01" min="0" required>
+            <span class="unit">т</span>
+        </div>
+        <div class="form-group">
+            <label for="Qot">Отпуск грузов со склада:</label>
+            <input type="number" id="Qot" step="0.01" min="0" required>
+            <span class="unit">т</span>
+        </div>
+        <div class="form-group">
+            <label for="T_koef">Период времени для расчета грузопереработки:</label>
+            <input type="number" id="T_koef" step="0.01" min="0" required>
+            <span class="unit">сут</span>
+        </div>
+    `;
+    container.appendChild(commonInputs);
+    
+    // Добавляем поля для каждого груза
     for (let i = 0; i < count; i++) {
         const cargoDiv = document.createElement('div');
         cargoDiv.className = 'cargo-inputs';
@@ -44,12 +78,14 @@ function createCargoInputs(count) {
         cargoDiv.innerHTML = `
             <h3>Груз ${i + 1}</h3>
             <div class="form-group">
-                <label for="qcr${i}">Расчётный суточный грузопоток (в тоннах):</label>
+                <label for="qcr${i}">Расчётный суточный грузопоток:</label>
                 <input type="number" id="qcr${i}" step="0.01" min="0" required>
+                <span class="unit">т/сут</span>
             </div>
             <div class="form-group">
-                <label for="T${i}">Срок хранения (в сутках):</label>
+                <label for="T${i}">Срок хранения:</label>
                 <input type="number" id="T${i}" step="0.01" min="0" required>
+                <span class="unit">сут</span>
             </div>
             <div class="form-group">
                 <label for="p${i}">Удельная нагрузка:</label>
@@ -73,8 +109,14 @@ function createCargoInputs(count) {
                 </select>
             </div>
             <div class="form-group">
-                <label for="Qci${i}">Среднесуточное поступление или отпуск материала (в т/сут):</label>
+                <label for="Qci${i}">Среднесуточное поступление или отпуск материала:</label>
                 <input type="number" id="Qci${i}" step="0.01" min="0" required>
+                <span class="unit">т/сут</span>
+            </div>
+            <div class="form-group">
+                <label for="V_goods${i}">Объём груза:</label>
+                <input type="number" id="V_goods${i}" step="0.01" min="0" required>
+                <span class="unit">т</span>
             </div>
         `;
         
@@ -106,7 +148,28 @@ function collectFormData() {
     return { count, width, goodstype };
 }
 
-// Function to display results
+// Функция для отображения коэффициентов отдельно
+function displayCoefficients(coefficients) {
+    document.getElementById('coefficients').style.display = 'block';
+    document.getElementById('k_use_space').innerHTML = `
+        <p>При коэф. складируемости 0,8: ${coefficients.k_use_space1}</p>
+        <p>При коэф. складируемости 0,9: ${coefficients.k_use_space2}</p>
+    `;
+    document.getElementById('k_use_v').innerHTML = `
+        <p>При коэф. складируемости 0,8: ${coefficients.k_use_v1}</p>
+        <p>При коэф. складируемости 0,9: ${coefficients.k_use_v2}</p>
+    `;
+    document.getElementById('k_ob').innerHTML = `
+        <p>При коэф. складируемости 0,8: ${coefficients.k_ob1}</p>
+        <p>При коэф. складируемости 0,9: ${coefficients.k_ob2}</p>
+    `;
+    document.getElementById('Qck').innerHTML = `
+        <p>При коэф. складируемости 0,8: ${coefficients.Qck1}</p>
+        <p>При коэф. складируемости 0,9: ${coefficients.Qck2}</p>
+    `;
+}
+
+// Функция для отображения основных результатов
 function displayResults(results) {
     const resultsDiv = document.getElementById('results');
     resultsDiv.style.display = 'block';
@@ -183,11 +246,38 @@ function calculateTotalArea(dV, L, W, kip) {
 }
 
 // Function to calculate coefficients
-function calculateCoefficients(Fl, fobsh1, fobsh2) {
+function calculateCoefficients(Fl, fobsh1, fobsh2, Vck1, Vck2) {
     const k_use_space1 = Fl / fobsh1;
     const k_use_space2 = Fl / fobsh2;
     
-    return { k_use_space1, k_use_space2 };
+    const Vf = parseFloat(document.getElementById('Vf').value);
+    const k_use_v1 = Vf / Vck1.reduce((a, b) => a + b, 0);
+    const k_use_v2 = Vf / Vck2.reduce((a, b) => a + b, 0);
+    
+    const Qn = parseFloat(document.getElementById('Qn').value);
+    const Qot = parseFloat(document.getElementById('Qot').value);
+    const k_ob1 = (Qn + Qot) / (2 * Vck1.reduce((a, b) => a + b, 0));
+    const k_ob2 = (Qn + Qot) / (2 * Vck2.reduce((a, b) => a + b, 0));
+    
+    const T_koef = parseFloat(document.getElementById('T_koef').value);
+    const V_goods = [];
+    const vg_T = [];
+    
+    for (let i = 0; i < a; i++) {
+        V_goods.push(parseFloat(document.getElementById(`V_goods${i}`).value));
+        vg_T.push(V_goods[i] * T[i]);
+    }
+    
+    const T_average = vg_T.reduce((a, b) => a + b, 0) / V_goods.reduce((a, b) => a + b, 0);
+    const Qck1 = Vck1.reduce((a, b) => a + b, 0) * T_koef / T_average;
+    const Qck2 = Vck2.reduce((a, b) => a + b, 0) * T_koef / T_average;
+    
+    return { 
+        k_use_space1, k_use_space2,
+        k_use_v1, k_use_v2,
+        k_ob1, k_ob2,
+        Qck1, Qck2
+    };
 }
 
 // Function to determine kip based on width and goods type
@@ -214,7 +304,7 @@ function calculate() {
     const receivingArea = calculateReceivingSortingArea();
     const usefulArea = calculateUsefulArea(1, kip);
     const totalArea = calculateTotalArea(1, 1, 1, kip);
-    const coefficients = calculateCoefficients(1, totalArea.fobsh1, totalArea.fobsh2);
+    const coefficients = calculateCoefficients(1, totalArea.fobsh1, totalArea.fobsh2, Vck1, Vck2);
     
     results += `<p>Вместимость склада при коэффициенте складируемости 0,8: ${capacity.vck1.toFixed(2)}</p>`;
     results += `<p>Вместимость склада при коэффициенте складируемости 0,9: ${capacity.vck2.toFixed(2)}</p>`;
@@ -226,10 +316,19 @@ function calculate() {
     results += `<p>Полезная площадь склада при коэф. складируемости 0,9: ${usefulArea.Fpol2.toFixed(2)}</p>`;
     results += `<p>Общая площадь склада при коэф. складируемости 0,8: ${totalArea.fobsh1.toFixed(2)}</p>`;
     results += `<p>Общая площадь склада при коэф. складируемости 0,9: ${totalArea.fobsh2.toFixed(2)}</p>`;
-    results += `<p>Коэффициент использования площади склада при коэф. складируемости 0,8: ${coefficients.k_use_space1.toFixed(2)}</p>`;
-    results += `<p>Коэффициент использования площади склада при коэф. складируемости 0,9: ${coefficients.k_use_space2.toFixed(2)}</p>`;
 
     displayResults(results);
+    // Выводим коэффициенты отдельно
+    displayCoefficients({
+        k_use_space1: coefficients.k_use_space1.toFixed(2),
+        k_use_space2: coefficients.k_use_space2.toFixed(2),
+        k_use_v1: coefficients.k_use_v1.toFixed(2),
+        k_use_v2: coefficients.k_use_v2.toFixed(2),
+        k_ob1: coefficients.k_ob1.toFixed(2),
+        k_ob2: coefficients.k_ob2.toFixed(2),
+        Qck1: coefficients.Qck1.toFixed(2),
+        Qck2: coefficients.Qck2.toFixed(2)
+    });
 }
 
 // Event Listeners
