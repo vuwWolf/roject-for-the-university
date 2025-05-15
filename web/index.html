@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Расчет склада</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>Расчет параметров склада</h1>
+    
+    <form id="warehouseForm">
+        <div class="form-group">
+            <label for="cargoCount">Количество поступающих на склад грузов:</label>
+            <input type="number" id="cargoCount" min="1" required>
+        </div>
+
+        <div id="cargoInputs"></div>
+
+        <div class="form-group">
+            <label for="warehouseWidth">Ширина склада (в метрах):</label>
+            <input type="number" id="warehouseWidth" step="0.01" min="0" required>
+        </div>
+
+        <div class="form-group">
+            <label for="cargoType">Тип грузов:</label>
+            <select id="cargoType" required>
+                <option value="1">Однородные крупногабаритные груза</option>
+                <option value="2">Мелкопартионные груза</option>
+            </select>
+        </div>
+
+        <button type="submit">Рассчитать</button>
+    </form>
+
+    <div id="results"></div>
+
+    <script src="warehouseCalculator.js"></script>
+</body>
+</html> 
